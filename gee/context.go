@@ -21,6 +21,8 @@ type Context struct {
 	//中间件
 	handlers []HandlerFunc
 	index    int
+	// engine pointer
+	engine *Engine
 }
 
 func (c *Context) Param(key string) string {
@@ -88,8 +90,10 @@ func (c *Context) Data(code int, date []byte) {
 	c.Writer.Write(date)
 } //写入data数据
 
-func (c *Context) HTML(code int, html string) {
+func (c *Context) HTML(code int, name string, data interface{}) {
 	c.SetHeader("Content-Type", "text/html")
 	c.Status(code)
-	c.Writer.Write([]byte(html))
+	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.Fail(500, err.Error())
+	}
 } //将数据作为html解析
